@@ -84,11 +84,11 @@ public class DokanOptions extends Structure implements Structure.ByReference {
 
     @Override
     protected List<String> getFieldOrder() {
-        return Arrays.asList("Version", "ThreadCount", "Options", "GlobalContext", "MountPoint", "UNCName", "Timeout", "AllocationUnitSize", "SectorSize");
+        return Arrays.asList("Version", "ThreadCount", "Options", "GlobalContext", "DokanyMountPoint", "UNCName", "Timeout", "AllocationUnitSize", "SectorSize");
     }
 
     @Override
     public String toString() {
-        return "DeviceOptions(Version=" + this.Version + ", ThreadCount=" + this.ThreadCount + ", Options=" + this.Options + ", mountOptions=" + this.getMountOptions() + ", GlobalContext=" + this.GlobalContext + ", MountPoint=" + this.MountPoint + ", UNCName=" + this.UNCName + ", Timeout=" + this.Timeout + ", AllocationUnitSize=" + this.AllocationUnitSize + ", SectorSize=" + this.SectorSize + ")";
+        return "DeviceOptions(Version=" + this.Version + ", ThreadCount=" + this.ThreadCount + ", Options=" + this.Options + ", mountOptions=" + this.getMountOptions() + ", GlobalContext=" + this.GlobalContext + ", DokanyMountPoint=" + this.MountPoint + ", UNCName=" + this.UNCName + ", Timeout=" + this.Timeout + ", AllocationUnitSize=" + this.AllocationUnitSize + ", SectorSize=" + this.SectorSize + ")";
     }
 }

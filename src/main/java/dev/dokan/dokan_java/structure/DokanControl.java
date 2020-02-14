@@ -69,7 +69,7 @@ public class DokanControl extends Structure implements Structure.ByReference {
 
     @Override
     protected List<String> getFieldOrder() {
-        return Arrays.asList("Type", "MountPoint", "UNCName", "DeviceName", "DeviceObject", "SessionId");
+        return Arrays.asList("Type", "DokanyMountPoint", "UNCName", "DeviceName", "DeviceObject", "SessionId");
     }
 
     /**
