@@ -37,14 +37,9 @@ public final class DokanyException extends RuntimeException {
         return errorCode;
     }
 
-    /**
-     * Use #getErrorCode() instead.
-     * @return error code.
-     */
-    @Deprecated
-    public int getValue() {
-        return errorCode;
+    @Override
+    public String toString(){
+        return String.format("%s, cause: %s, error code: %s",getMessage(),getCause(),errorCode);
     }
-
 
 }
