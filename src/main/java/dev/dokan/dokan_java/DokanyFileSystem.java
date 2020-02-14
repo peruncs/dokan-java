@@ -4,10 +4,7 @@ import dev.dokan.dokan_java.constants.microsoft.FileSystemFlag;
 import dev.dokan.dokan_java.structure.EnumIntegerSet;
 
 
-public class DokanyFileSystem {
-
-    public static final int DEFAULT_MAX_COMPONENT_LENGTH = 256;
-    public static final String DEFAULT_FS_NAME = "NTFS";
+final public class DokanyFileSystem {
 
     private final int maxComponentLength;
     private final String fileSystemName;
@@ -23,8 +20,8 @@ public class DokanyFileSystem {
     }
 
     public DokanyFileSystem(EnumIntegerSet<FileSystemFlag> fileSystemFeatures, boolean usesKernelFlagsAndCodes) {
-        this.maxComponentLength = DEFAULT_MAX_COMPONENT_LENGTH;
-        this.fileSystemName = DEFAULT_FS_NAME;
+        this.maxComponentLength = 256;
+        this.fileSystemName = "NTFS";
         this.fileSystemFeatures = fileSystemFeatures;
         this.usesKernelFlagsAndCodes = usesKernelFlagsAndCodes;
     }
