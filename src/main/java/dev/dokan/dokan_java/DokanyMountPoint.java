@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Represents a file system mount point.
  */
-public final class DokanyMountPoint implements Closeable {
+public class DokanyMountPoint implements Closeable {
 
     protected final DokanyFileSystem fileSystem;
     protected final Path mountPoint;
@@ -49,6 +49,16 @@ public final class DokanyMountPoint implements Closeable {
         this.dokanyOperations = dokanyOperations;
     }
 
+    public DokanyMountPoint(DokanyFileSystem fileSystem, DokanOptions dokanOptions, String volumeName, int volumeSerialNumber) {
+        this.fileSystem = fileSystem;
+        this.dokanOptions = dokanOptions;
+        this.mountPoint = Path.of(dokanOptions.MountPoint.toString());
+        this.volumeName = volumeName;
+        this.volumeSerialNumber = volumeSerialNumber;
+        this.isMounted = new AtomicBoolean(false);
+        this.dokanyOperations = new DokanyOperations();
+    }
+
     /**
      * An additional constructor for easy mounting with a lot of default values.
      *
@@ -63,7 +73,17 @@ public final class DokanyMountPoint implements Closeable {
         this.volumeName = "DOKAN";
         this.volumeSerialNumber = 30975;
         this.isMounted = new AtomicBoolean(false);
-        this.dokanyOperations = dokanyOperations;
+        this.dokanyOperations = new DokanyOperations();
+    }
+
+    public DokanyMountPoint(DokanyFileSystem fileSystem, Path mountPoint, EnumIntegerSet<MountOption> mountOptions) {
+        this.fileSystem = fileSystem;
+        this.dokanOptions = new DokanOptions(mountPoint.toString(), (short) 5, mountOptions, null, 3000, 4096, 512);
+        this.mountPoint = Path.of(dokanOptions.MountPoint.toString());
+        this.volumeName = "DOKAN";
+        this.volumeSerialNumber = 30975;
+        this.isMounted = new AtomicBoolean(false);
+        this.dokanyOperations = new DokanyOperations();
     }
 
     public final synchronized void mount(boolean blocking) {
