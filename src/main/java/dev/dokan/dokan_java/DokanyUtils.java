@@ -1,10 +1,20 @@
 package dev.dokan.dokan_java;
 
+import com.sun.jna.WString;
 import com.sun.jna.platform.win32.WinBase.FILETIME;
 import com.sun.jna.platform.win32.WinNT;
-import dev.dokan.dokan_java.constants.microsoft.CreationDisposition;
+import dev.dokan.dokan_java.constants.microsoft.*;
+import dev.dokan.dokan_java.structure.EnumIntegerSet;
 
+import java.io.IOException;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.DosFileAttributeView;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import static com.sun.jna.platform.win32.WinError.*;
 import static dev.dokan.dokan_java.constants.microsoft.CreateDispositions.*;
@@ -26,6 +36,9 @@ import static dev.dokan.dokan_java.constants.microsoft.Win32ErrorCodes.ERROR_DEV
  * Utilities to do various operations.
  */
 public class DokanyUtils {
+
+    private static final Logger LOG = Logger.getLogger(DokanyUtils.class.getName());
+
 
     private static final boolean winVersionAtLeast8;
 
@@ -1428,6 +1441,89 @@ public class DokanyUtils {
             default:
                 return STATUS_UNSUCCESSFUL;
         }
+    }
+
+
+    public static Set<OpenOption> buildOpenOptions(EnumIntegerSet<AccessMask> accessMasks, EnumIntegerSet<FileAccessMask> fileAccessMasks, EnumIntegerSet<FileAttribute> fileAttributes, EnumIntegerSet<CreateOption> createOptions, CreationDisposition creationDisposition, boolean append, boolean fileExists) {
+        Set<OpenOption> openOptions = new HashSet<>();
+        if (accessMasks.contains(AccessMask.GENERIC_WRITE) || fileAccessMasks.contains(FileAccessMask.WRITE_DATA) || fileAccessMasks.contains(FileAccessMask.APPEND_DATA)) {
+            openOptions.add(StandardOpenOption.WRITE);
+        }
+        if (accessMasks.contains(AccessMask.GENERIC_READ) || fileAccessMasks.contains(FileAccessMask.READ_DATA)) {
+            openOptions.add(StandardOpenOption.READ);
+        }
+        if (accessMasks.contains(AccessMask.MAXIMUM_ALLOWED) || accessMasks.contains(AccessMask.GENERIC_ALL)) {
+            openOptions.add(StandardOpenOption.READ);
+            openOptions.add(StandardOpenOption.WRITE);
+        }
+        if (createOptions.contains(CreateOptions.FILE_WRITE_THROUGH) || createOptions.contains(CreateOptions.FILE_NO_INTERMEDIATE_BUFFERING)) {
+            openOptions.add(StandardOpenOption.SYNC);
+        }
+        if (append) {
+            openOptions.add(StandardOpenOption.APPEND);
+        }
+        // From the Java Documentation of DELETE_ON_CLOSE:This option is not recommended for use when opening files that are open concurrently by other entities.
+//		if (accessMasks.contains(AccessMask.DELETE) && createOptions.contains(CreateOptions.FILE_DELETE_ON_CLOSE)) {
+//			//openOptions.add(StandardOpenOption.DELETE_ON_CLOSE);
+//		}
+        if (fileAttributes.contains(FileAttribute.SPARSE_FILE)) {
+            openOptions.add(StandardOpenOption.SPARSE);
+        }
+        switch (creationDisposition) {
+            case CREATE_NEW:
+                openOptions.add(StandardOpenOption.CREATE_NEW);
+                openOptions.add(StandardOpenOption.WRITE); //Necessary, otherwise an Exceptions is thrown during filechannel creation
+                break;
+            case CREATE_ALWAYS:
+                if (fileExists) {
+                    openOptions.add(StandardOpenOption.TRUNCATE_EXISTING);
+                } else {
+                    openOptions.add(StandardOpenOption.CREATE);
+                    openOptions.add(StandardOpenOption.WRITE);
+                }
+                break;
+            case OPEN_EXISTING:
+                openOptions.add(StandardOpenOption.READ);
+                break;
+            case OPEN_ALWAYS:
+                openOptions.add(StandardOpenOption.CREATE);
+                if (!fileExists) openOptions.add(StandardOpenOption.WRITE);
+                break;
+            case TRUNCATE_EXISTING:
+                openOptions.add(StandardOpenOption.TRUNCATE_EXISTING);
+                break;
+            default:
+                throw new IllegalStateException("Unknown createDispostion attribute: " + creationDisposition.name());
+
+        }
+        return openOptions;
+    }
+
+    public static void setAttribute(DosFileAttributeView attrView, FileAttribute attr, boolean value) throws IOException {
+        switch (attr) {
+            case ARCHIVE:
+                attrView.setArchive(value);
+                break;
+            case HIDDEN:
+                attrView.setHidden(value);
+                break;
+            case READONLY:
+                attrView.setReadOnly(value);
+                break;
+            case SYSTEM:
+                attrView.setSystem(value);
+                break;
+            default:
+                LOG.finest(()->"Windows file attribute % is not supported, ignored".formatted(attr.name()));
+        }
+    }
+
+    public static Path getrootedPath(Path root, WString rawPath) {
+        String unixPath = rawPath.toString().replace('\\', '/');
+        String relativeUnixPath = unixPath;
+        if(unixPath.startsWith("/"))
+            relativeUnixPath =  unixPath.length()==1?"":unixPath.substring(1); // if it is already the root, we return the empty string
+        return root.resolve(relativeUnixPath);
     }
 
 }
