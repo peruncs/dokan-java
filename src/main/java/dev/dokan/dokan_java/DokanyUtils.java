@@ -1,6 +1,7 @@
 package dev.dokan.dokan_java;
 
 import com.sun.jna.WString;
+import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinBase.FILETIME;
 import com.sun.jna.platform.win32.WinNT;
 import dev.dokan.dokan_java.constants.microsoft.*;
@@ -11,8 +12,12 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.DosFileAttributeView;
+import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -36,6 +41,16 @@ import static dev.dokan.dokan_java.constants.microsoft.Win32ErrorCodes.ERROR_DEV
  * Utilities to do various operations.
  */
 public class DokanyUtils {
+
+
+    public static final Instant WINDOWS_EPOCH_START = Instant.parse("1601-01-01T00:00:00Z");
+    // from wdm.h
+    public static final int FILE_SUPERSEDE = 0x00000000;
+    public static final int FILE_OPEN = 0x00000001;
+    public static final int FILE_CREATE = 0x00000002;
+    public static final int FILE_OPEN_IF = 0x00000003;
+    public static final int FILE_OVERWRITE = 0x00000004;
+    public static final int FILE_OVERWRITE_IF = 0x00000005;
 
     private static final Logger LOG = Logger.getLogger(DokanyUtils.class.getName());
 
@@ -63,6 +78,14 @@ public class DokanyUtils {
         return str.substring(0, Math.min(str.length(), len));
     }
 
+    public static Optional<FileTime> toFileTime(WinBase.FILETIME windowsTime) {
+        Instant instant = windowsTime.toDate().toInstant();
+        if (instant.equals(WINDOWS_EPOCH_START)) {
+            return Optional.empty();
+        } else {
+            return Optional.of(FileTime.from(instant));
+        }
+    }
     public static FILETIME getTime(final Date date) {
         return new FILETIME(date);
     }
@@ -1514,8 +1537,34 @@ public class DokanyUtils {
                 attrView.setSystem(value);
                 break;
             default:
-                LOG.finest(()->"Windows file attribute % is not supported, ignored".formatted(attr.name()));
+                LOG.finest(()->String.format("Windows file attribute % is not supported, ignored",attr.name()));
         }
+    }
+
+    public static EnumIntegerSet<FileAttribute> dosAttributesToEnumIntegerSet(DosFileAttributes attr) {
+        EnumIntegerSet<FileAttribute> set = new EnumIntegerSet<>(FileAttribute.class);
+        if (attr.isArchive()) {
+            set.add(FileAttribute.ARCHIVE);
+        }
+        if (attr.isHidden()) {
+            set.add(FileAttribute.HIDDEN);
+        }
+        if (attr.isReadOnly()) {
+            set.add(FileAttribute.READONLY);
+        }
+        if (attr.isSystem()) {
+            set.add(FileAttribute.SYSTEM);
+        }
+        if (attr.isDirectory()) {
+            set.add(FileAttribute.DIRECTORY);
+        }
+        if (attr.isSymbolicLink()) {
+            set.add(FileAttribute.REPARSE_POINT);
+        }
+        if (attr.isRegularFile() && set.isEmpty()) {
+            set.add(FileAttribute.NORMAL);
+        }
+        return set;
     }
 
     public static Path getrootedPath(Path root, WString rawPath) {
