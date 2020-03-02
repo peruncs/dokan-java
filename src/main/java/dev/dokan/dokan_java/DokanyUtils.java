@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import static com.sun.jna.platform.win32.WinError.*;
-import static dev.dokan.dokan_java.constants.microsoft.CreateDispositions.*;
 import static dev.dokan.dokan_java.constants.microsoft.CreateOptions.*;
 import static dev.dokan.dokan_java.constants.microsoft.CreationDisposition.*;
 import static dev.dokan.dokan_java.constants.microsoft.NtStatuses.*;
@@ -1567,7 +1566,7 @@ public class DokanyUtils {
         return set;
     }
 
-    public static Path getrootedPath(Path root, WString rawPath) {
+    public static Path getRootedPath(Path root, WString rawPath) {
         String unixPath = rawPath.toString().replace('\\', '/');
         String relativeUnixPath = unixPath;
         if(unixPath.startsWith("/"))
