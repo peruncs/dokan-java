@@ -125,7 +125,7 @@ public class DokanyMountPoint implements Closeable {
             if (mountStatus < 0) {
                 throw new DokanyException("Negative result of mount operation. Code" + mountStatus + " -- " + MountError.fromInt(mountStatus).getDescription(), mountStatus);
             }
-        } catch (UnsatisfiedLinkError | Exception e) {
+        } catch (Exception e) {
             throw new DokanyException("Unable to mount filesystem.", e);
         }
     }
