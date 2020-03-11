@@ -11,7 +11,7 @@ tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
     sourceCompatibility = JavaVersion.VERSION_13
     targetCompatibility = JavaVersion.VERSION_13
-    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation" <<"--enable-preview"
+    options.compilerArgs << "-Xlint"
 }
 
 dependencies {
