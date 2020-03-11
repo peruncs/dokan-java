@@ -34,10 +34,10 @@ public class DokanyMountPoint implements Closeable {
     /**
      * Constructor.
      *
-     * @param dokanOptions options.
-     * @param volumeName   volume name.
+     * @param dokanOptions       options.
+     * @param volumeName         volume name.
      * @param volumeSerialNumber serial number.
-     * @param dokanyOperations operations.
+     * @param dokanyOperations   operations.
      */
     public DokanyMountPoint(DokanyFileSystem fileSystem, DokanOptions dokanOptions, String volumeName, int volumeSerialNumber, DokanyOperations dokanyOperations) {
         this.fileSystem = fileSystem;
@@ -62,8 +62,8 @@ public class DokanyMountPoint implements Closeable {
     /**
      * An additional constructor for easy mounting with a lot of default values.
      *
-     * @param mountPoint where to mount .
-     * @param mountOptions options.
+     * @param mountPoint       where to mount .
+     * @param mountOptions     options.
      * @param dokanyOperations operations.
      */
     public DokanyMountPoint(DokanyFileSystem fileSystem, Path mountPoint, EnumIntegerSet<MountOption> mountOptions, DokanyOperations dokanyOperations) {
@@ -86,14 +86,28 @@ public class DokanyMountPoint implements Closeable {
         this.dokanyOperations = new DokanyOperations();
     }
 
+    public final synchronized CompletableFuture<Void> mount() {
+        return CompletableFuture
+                .runAsync(() -> {
+                    int mountStatus = NativeMethods.DokanMain(dokanOptions, dokanyOperations);
+                    MountError error = MountError.fromInt(mountStatus);
+                    if(error==MountError.SUCCESS){
+                        isMounted.set(true);
+                    }else{
+                        isMounted.set(false);
+                        throw new DokanyException("Negative result of mount operation. Code" + mountStatus + " -- " + MountError.fromInt(mountStatus).getDescription(), mountStatus);
+                    }
+                });
+    }
+
     public final synchronized void mount(boolean blocking) {
 
         try {
             int mountStatus;
 
-            if (DokanyUtils.canHandleShutdownHooks()) {
-                Runtime.getRuntime().addShutdownHook(new Thread(this::close));
-            }
+//            if (DokanyUtils.canHandleShutdownHooks()) {
+//                Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+//            }
 
             if (blocking) {
                 mountStatus = NativeMethods.DokanMain(dokanOptions, dokanyOperations);
@@ -132,6 +146,10 @@ public class DokanyMountPoint implements Closeable {
         }
     }
 
+    public boolean isMounted(){
+        return isMounted.get();
+    }
+
     private boolean volumeIsStillMounted() {
         char[] mntPtCharArray = mountPoint.toAbsolutePath().toString().toCharArray();
         LongByReference length = new LongByReference();
@@ -140,7 +158,7 @@ public class DokanyMountPoint implements Closeable {
         // It is not enough for the entry.DokanyMountPoint to contain the actual mount point. It also has to ends afterwards.
         boolean mountPointInList = list.stream().anyMatch(entry ->
                 Arrays.equals(entry.MountPoint, 12, 12 + mntPtCharArray.length, mntPtCharArray, 0, mntPtCharArray.length)
-                        && (entry.MountPoint.length == 12 + mntPtCharArray.length || entry.MountPoint[12 + mntPtCharArray.length] == '\0'));
+                && (entry.MountPoint.length == 12 + mntPtCharArray.length || entry.MountPoint[12 + mntPtCharArray.length] == '\0'));
         NativeMethods.DokanReleaseMountPointList(startOfList);
         return mountPointInList;
     }
