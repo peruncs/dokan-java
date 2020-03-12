@@ -86,21 +86,21 @@ public class DokanyMountPoint implements Closeable {
         this.dokanyOperations = new DokanyOperations();
     }
 
-    public final synchronized CompletableFuture<Void> mount() {
+    public synchronized CompletableFuture<Void> mount() {
         return CompletableFuture
                 .runAsync(() -> {
                     int mountStatus = NativeMethods.DokanMain(dokanOptions, dokanyOperations);
                     MountError error = MountError.fromInt(mountStatus);
-                    if(error==MountError.SUCCESS){
+                    if (error == MountError.SUCCESS) {
                         isMounted.set(true);
-                    }else{
+                    } else {
                         isMounted.set(false);
                         throw new DokanyException("Negative result of mount operation. Code" + mountStatus + " -- " + MountError.fromInt(mountStatus).getDescription(), mountStatus);
                     }
                 });
     }
 
-    public final synchronized void mount(boolean blocking) {
+    public synchronized void mount(boolean blocking) {
 
         try {
             int mountStatus;
@@ -132,7 +132,7 @@ public class DokanyMountPoint implements Closeable {
 
 
     @Override
-    public final synchronized void close() {
+    public synchronized void close() {
         if (!volumeIsStillMounted()) {
             isMounted.set(false);
         }
@@ -146,7 +146,7 @@ public class DokanyMountPoint implements Closeable {
         }
     }
 
-    public boolean isMounted(){
+    public boolean isMounted() {
         return isMounted.get();
     }
 
