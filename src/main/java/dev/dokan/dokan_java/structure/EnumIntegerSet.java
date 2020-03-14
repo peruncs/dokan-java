@@ -22,6 +22,7 @@ public final class EnumIntegerSet<T extends Enum<T> & EnumInteger> extends Abstr
     }
 
     @SafeVarargs
+    @SuppressWarnings("varargs")
     public EnumIntegerSet(T first, T... others) {
         this.elements = EnumSet.of(first, others);
     }

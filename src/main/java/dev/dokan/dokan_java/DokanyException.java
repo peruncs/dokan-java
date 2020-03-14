@@ -1,5 +1,6 @@
 package dev.dokan.dokan_java;
 
+@SuppressWarnings("serial")
 public final class DokanyException extends RuntimeException {
 
     private final int errorCode;
