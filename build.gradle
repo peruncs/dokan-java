@@ -9,9 +9,9 @@ plugins {
 tasks.withType(JavaCompile) {
     options.incremental = true
     options.encoding = 'UTF-8'
-    sourceCompatibility = JavaVersion.VERSION_13
-    targetCompatibility = JavaVersion.VERSION_13
-    options.compilerArgs << "-Xlint"
+    sourceCompatibility = JavaVersion.VERSION_14
+    targetCompatibility = JavaVersion.VERSION_14
+    options.compilerArgs  << "-Xlint"<<"-Xlint:-try"
 }
 
 dependencies {
